@@ -1,0 +1,12 @@
+@import './misc/typography.scss';
+@import './misc/colors.scss';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: $light-blue;
+}
