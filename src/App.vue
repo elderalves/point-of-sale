@@ -1,31 +1,18 @@
 <template>
   <div id="app">
-    <div class="pos">
-      <Summary/>
-      <div class="pos__main">
-          <Header/>
-          <NavigationBar/>
-          <Main/>
-      </div>
-    </div>
+    <Pos/>
   </div>
 </template>
 
 <script>
-import Summary from './components/Summary.vue'
-import Header from './components/Header.vue'
-import NavigationBar from './components/NavigationBar.vue'
-import Main from './components/Main.vue'
+import Pos from "./components/Pos.vue";
 
 export default {
-  name: 'app',
+  name: "app",
   components: {
-    Summary,
-    Header,
-    NavigationBar,
-    Main
+    Pos
   }
-}
+};
 </script>
 
 <style lang="scss">
@@ -45,10 +32,11 @@ export default {
 }
 
 /* MM: Screen */
-@media screen and (max-width: 1280px) { }
+@media screen and (max-width: 1280px) {
+}
 
 /* SM: Screen */
-@media screen and (max-width: 1024px) { 
+@media screen and (max-width: 1024px) {
   .pos {
     &__row {
       padding: 0 25px;
@@ -66,9 +54,10 @@ export default {
 }
 
 /*iPhone 6/7*/
-@media screen and (max-width: 500px) { }
+@media screen and (max-width: 500px) {
+}
 
 /*iPhone 5 */
-@media screen and (max-width: 320px) { }
-
+@media screen and (max-width: 320px) {
+}
 </style>
