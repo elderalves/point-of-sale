@@ -1,4 +1,14 @@
+require('dotenv').config();
+
 const { defineConfig } = require('@playwright/test');
+
+const hasTestRailConfig = [
+  'TESTRAIL_HOST',
+  'TESTRAIL_USERNAME',
+  'TESTRAIL_PROJECT_ID',
+  'TESTRAIL_SUITE_ID'
+].every((key) => Boolean(process.env[key])) &&
+  Boolean(process.env.TESTRAIL_API_KEY || process.env.TESTRAIL_PASSWORD);
 
 module.exports = defineConfig({
   testDir: './tests',
@@ -16,6 +26,6 @@ module.exports = defineConfig({
   },
   reporter: [
     ['list'], // Keep the default list reporter
-    ['playwright-testrail-reporter'] // Add TestRail reporter
+    ...(hasTestRailConfig ? [['playwright-testrail-reporter']] : [])
   ],
 });
