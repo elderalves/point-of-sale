@@ -1,4 +1,8 @@
 const { test, expect } = require('@playwright/test');
+const {
+  addResultComment,
+  attachFailureScreenshot
+} = require('./helpers/testrail');
 
 function productCard(page, name) {
   return page.locator('.product__item').filter({ hasText: name });
@@ -12,7 +16,17 @@ function invoiceValue(page, label) {
 }
 
 test.describe('Mock POS flow', () => {
-  test('shows an empty order by default', async ({ page }) => {
+  test.afterEach(async ({ page }, testInfo) => {
+    await attachFailureScreenshot(page, testInfo);
+  });
+
+  test('shows an empty order by default', async ({ page }, testInfo) => {
+    addResultComment(testInfo, [
+      'Open the POS landing page.',
+      'Verify the order starts empty.',
+      'Confirm payment and clear actions are disabled.'
+    ]);
+
     await page.goto('/');
 
     await expect(page.locator('.summary__empty')).toHaveText(
@@ -26,7 +40,13 @@ test.describe('Mock POS flow', () => {
     await expect(page.locator('.navigation-bar')).toContainText('Pizza');
   });
 
-  test('adds items, calculates totals, and pays the order', async ({ page }) => {
+  test('adds items, calculates totals, and pays the order', async ({ page }, testInfo) => {
+    addResultComment(testInfo, [
+      'Add two pepperoni pizzas to the order.',
+      'Verify the subtotal and total values.',
+      'Complete payment and confirm the balance is zero.'
+    ]);
+
     await page.goto('/');
 
     const pepperoni = productCard(page, 'Pizza-16 Inch Pepperoni');
@@ -49,7 +69,13 @@ test.describe('Mock POS flow', () => {
     await expect(page.getByRole('button', { name: 'Paid' })).toBeDisabled();
   });
 
-  test('C38: filters products, cycles the customer, and cancels the order', async ({ page }) => {
+  test('filters products, cycles the customer, and cancels the order', async ({ page }, testInfo) => {
+    addResultComment(testInfo, [
+      'Switch the customer profile.',
+      'Filter the catalog to pizza products.',
+      'Add an item, then cancel the order and verify the reset state.'
+    ]);
+
     await page.goto('/');
 
     await page.getByRole('button', { name: 'Customer: Walk-in Guest' }).click();
