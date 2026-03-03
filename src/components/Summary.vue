@@ -1,27 +1,34 @@
 <template>
   <div class="summary">
-    <h3 class="summary__order">ORDER #23934 {{ count }}</h3>
+    <h3 class="summary__order">
+      ORDER #{{ orderNumber }}
+      <span class="summary__badge">{{ orderStatusLabel }}</span>
+    </h3>
     <div class="summary__section">
       <div class="summary__section-title">
         <h4>Items</h4>
-        <p>$97,50</p>
+        <p>{{ formatCurrency(subtotal) }}</p>
       </div>
       <div class="summary__products">
-        <ul>
-          <li class="summary__product-item">
-            <button class="summary__product-delete">X</button>
-            <h4 class="summary__product-title">Pizza-16 Inch Pepperoni</h4>
-            <p class="summary__product-info">1 Qtd - $30.00</p>
-          </li>
-          <li class="summary__product-item">
-            <button class="summary__product-delete">X</button>
-            <h4 class="summary__product-title">2 Cookies & Slice of Cake</h4>
-            <p class="summary__product-info">8 Qtd - $30.00</p>
-          </li>
-          <li class="summary__product-item">
-            <button class="summary__product-delete">X</button>
-            <h4 class="summary__product-title">Laser Tag Game</h4>
-            <p class="summary__product-info">5 Qtd - $37.50</p>
+        <p v-if="!cartItems.length" class="summary__empty">
+          Start adding items from the mock catalog to build this order.
+        </p>
+        <ul v-else>
+          <li
+            v-for="item in cartItems"
+            :key="item.id"
+            class="summary__product-item"
+          >
+            <button
+              class="summary__product-delete"
+              @click="clearProduct(item.id)"
+            >
+              X
+            </button>
+            <h4 class="summary__product-title">{{ item.name }}</h4>
+            <p class="summary__product-info">
+              {{ item.quantity }} Qty - {{ formatCurrency(item.lineTotal) }}
+            </p>
           </li>
         </ul>
       </div>
@@ -33,40 +40,36 @@
       <div class="summary__invoice">
         <ul>
           <li class="summary__invoice-item">
-            <h4 class="summary__invoice-title">Pre-total</h4>
-            <p class="summary__invoice-value">$97.50</p>
+            <h4 class="summary__invoice-title">Subtotal</h4>
+            <p class="summary__invoice-value">{{ formatCurrency(subtotal) }}</p>
           </li>
           <li class="summary__invoice-item">
             <h4 class="summary__invoice-title">1% Tax:</h4>
-            <p class="summary__invoice-value">$0.00</p>
+            <p class="summary__invoice-value">{{ formatCurrency(smallTax) }}</p>
           </li>
           <li class="summary__invoice-item">
             <h4 class="summary__invoice-title">10% Tax:</h4>
-            <p class="summary__invoice-value">$0.00</p>
-          </li>
-          <li class="summary__invoice-item">
-            <h4 class="summary__invoice-title">AppInsightsTest:</h4>
-            <p class="summary__invoice-value">$0.00</p>
-          </li>
-          <li class="summary__invoice-item">
-            <h4 class="summary__invoice-title">Sales Tax:</h4>
-            <p class="summary__invoice-value">$0.00</p>
-          </li>
-          <li class="summary__invoice-item">
-            <h4 class="summary__invoice-title">Sub-total:</h4>
-            <p class="summary__invoice-value">$0.00</p>
+            <p class="summary__invoice-value">{{ formatCurrency(largeTax) }}</p>
           </li>
           <li class="summary__invoice-item">
             <h4 class="summary__invoice-title">Service Fee:</h4>
-            <p class="summary__invoice-value">$0.00</p>
+            <p class="summary__invoice-value">{{ formatCurrency(serviceFee) }}</p>
           </li>
           <li class="summary__invoice-item">
-            <h4 class="summary__invoice-title">Total with Service Fee:</h4>
-            <p class="summary__invoice-value">$97.50</p>
+            <h4 class="summary__invoice-title">Items in Cart:</h4>
+            <p class="summary__invoice-value">{{ itemCount }}</p>
+          </li>
+          <li class="summary__invoice-item">
+            <h4 class="summary__invoice-title">Order Total:</h4>
+            <p class="summary__invoice-value">{{ formatCurrency(total) }}</p>
           </li>
           <li class="summary__invoice-item">
             <h4 class="summary__invoice-title">Payments:</h4>
-            <p class="summary__invoice-value">$0.00</p>
+            <p class="summary__invoice-value">{{ formatCurrency(paidAmount) }}</p>
+          </li>
+          <li class="summary__invoice-item">
+            <h4 class="summary__invoice-title">Balance Due:</h4>
+            <p class="summary__invoice-value">{{ formatCurrency(balanceDue) }}</p>
           </li>
         </ul>
       </div>
@@ -74,18 +77,40 @@
     <div class="summary__section">
       <div class="summary__section-title">
         <h4>Total</h4>
-        <p><strong>$97,50</strong></p>
+        <p><strong>{{ formatCurrency(total) }}</strong></p>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapGetters, mapState } from 'vuex';
+
 export default {
-  computed: mapState({
-    count: state => state.count
-  })
+  computed: {
+    ...mapState(['orderNumber', 'orderStatus', 'paidAmount']),
+    ...mapGetters([
+      'cartItems',
+      'itemCount',
+      'subtotal',
+      'smallTax',
+      'largeTax',
+      'serviceFee',
+      'total',
+      'balanceDue'
+    ]),
+    orderStatusLabel () {
+      return this.orderStatus === 'PAID' ? 'Paid' : 'Open';
+    }
+  },
+  methods: {
+    clearProduct (productId) {
+      this.$store.dispatch('clearProduct', productId);
+    },
+    formatCurrency (value) {
+      return `$${value.toFixed(2)}`;
+    }
+  }
 }
 </script>
 
@@ -108,6 +133,17 @@ export default {
     font-weight: 600;
     color: $text-dark;
     margin-bottom: 30px;
+  }
+
+  &__badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background-color: #eef6ee;
+    color: $green;
+    font-size: 12px;
+    vertical-align: middle;
   }
 
   &__section {
@@ -149,6 +185,11 @@ export default {
     ul {
       list-style-type: none;
     }
+  }
+
+  &__empty {
+    color: $text-light;
+    line-height: 1.4;
   }
 
   &__product {

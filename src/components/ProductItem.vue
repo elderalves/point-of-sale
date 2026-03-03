@@ -1,17 +1,31 @@
 <template>
-    <div class="product__item" :class="{'product__item-cart': isOnCart}">
-      <div class="product__content">
-        <div class="product__color"></div>
+  <div class="product__item" :class="{ 'product__item-cart': isOnCart }">
+    <div class="product__content">
+      <div
+        class="product__color"
+        :style="{ backgroundColor: product.color }"
+      ></div>
+      <div>
         <div class="product__name">{{ product.name }}</div>
-      </div>
-      <div class="product__action">
-        <p class="product__qtd">{{ qtd }}</p>
-        <div class="product__controls">
-          <button @click="removeProduct()" class="product__subtraction">-</button>
-          <button @click="addProduct" class="product__addition">+</button>
+        <div class="product__meta">
+          {{ product.category }} • {{ formatCurrency(product.price) }}
         </div>
       </div>
     </div>
+    <div class="product__action">
+      <p class="product__qtd">{{ qtd }}</p>
+      <div class="product__controls">
+        <button
+          class="product__subtraction"
+          @click="removeProduct"
+          :disabled="!qtd"
+        >
+          -
+        </button>
+        <button @click="addProduct" class="product__addition">+</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -20,31 +34,40 @@ import { findAncestor } from './../helpers/DOM';
 
 export default {
   props: ['product'],
-  data() {
-    return {
-      qtd: 0
-    }
-  },
   computed: {
-    isOnCart() {
-      return (this.qtd > 0) ? true : false;
+    qtd () {
+      return this.$store.getters.cartQuantity(this.product.id);
+    },
+    isOnCart () {
+      return this.qtd > 0;
     }
   },
   methods: {
-    addProduct(event) {
-      this.qtd++;
-      if(this.qtd === 1) {
+    addProduct (event) {
+      const shouldAnimate = this.qtd === 0;
+
+      this.$store.dispatch('addProduct', this.product.id);
+
+      if (shouldAnimate) {
         const productItem = findAncestor(event.target, 'product__item');
+
         this.animateAddProduct(productItem);
       }
     },
-    removeProduct() {
-      (this.qtd > 0) ? this.qtd-- : null;
+    removeProduct () {
+      this.$store.dispatch('removeProduct', this.product.id);
     },
-    animateAddProduct(productItem) {
+    animateAddProduct (productItem) {
+      if (!productItem) {
+        return;
+      }
+
       let tl = new TimelineMax();
-      tl.add(TweenMax.to(productItem, .3, {scale:1.05}));
-      tl.add(TweenMax.to(productItem, .2, {scale:1}));
+      tl.add(TweenMax.to(productItem, 0.3, { scale: 1.05, ease: Power0.easeNone }));
+      tl.add(TweenMax.to(productItem, 0.2, { scale: 1, ease: Power0.easeNone }));
+    },
+    formatCurrency (value) {
+      return `$${value.toFixed(2)}`;
     }
   }
 }
@@ -69,11 +92,6 @@ export default {
 
     &-cart {
       border: 1px solid $green;
-
-      .product__color {
-        background-color: $green;
-      }
-
     }
   }
 
@@ -93,6 +111,12 @@ export default {
   &__name {
     margin-left: 10px;
     font-size: 18px;
+  }
+
+  &__meta {
+    margin-left: 10px;
+    color: $text-light;
+    font-size: 13px;
   }
 
   &__action {
@@ -125,6 +149,11 @@ export default {
 
       &:focus {
         outline: none;
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
       }
     }
   }

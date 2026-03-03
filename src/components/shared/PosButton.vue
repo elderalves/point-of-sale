@@ -1,19 +1,39 @@
 <template>
-    <button class="button" :class="buttonClass">
-      {{this.label}}
-    </button>
+  <button
+    class="button"
+    :class="buttonClass"
+    :disabled="disabled"
+    @click="$emit('click', $event)"
+  >
+    {{ label }}
+  </button>
 </template>
 
 <script>
 export default {
-  props: ['type', 'label'],
+  props: {
+    type: {
+      type: String,
+      default: 'default'
+    },
+    label: {
+      type: String,
+      default: ''
+    },
+    disabled: {
+      type: Boolean,
+      default: false
+    }
+  },
   computed: {
-    buttonClass() {
-      switch(this.type) {
-        case "default":
+    buttonClass () {
+      switch (this.type) {
+        case 'default':
           return ['button-default']
-        case "success":
+        case 'success':
           return ['button-success']
+        default:
+          return ['button-default']
       }
     }
   }
@@ -30,6 +50,11 @@ export default {
 
   &:hover {
     outline: none;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
   }
 
   &-default {

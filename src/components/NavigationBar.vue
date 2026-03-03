@@ -2,35 +2,15 @@
   <div class="navigation-bar">
     <div class="pos__row">
       <ul>
-        <li class="active">
-          <a href="#">
+        <li
+          v-for="category in categories"
+          :key="category"
+          :class="{ active: activeCategory === category }"
+        >
+          <button type="button" @click="setCategory(category)">
             <i class="fa fa-cube"></i>
-            <span>QA</span>
-          </a>
-        </li>
-        <li>
-          <a href="#">
-            <i class="fa fa-cube"></i>
-            <span>Pizza</span>
-          </a>
-        </li>
-        <li>
-          <a href="#">
-            <i class="fa fa-cube"></i>
-            <span>Session M</span>
-          </a>
-        </li>
-        <li>
-          <a href="#">
-            <i class="fa fa-cube"></i>
-            <span>LoyalTree</span>
-          </a>
-        </li>
-        <li>
-          <a href="#">
-            <i class="fa fa-cube"></i>
-            <span>Category 5</span>
-          </a>
+            <span>{{ category }}</span>
+          </button>
         </li>
       </ul>
     </div>
@@ -38,8 +18,18 @@
 </template>
 
 <script>
+import { mapGetters, mapState } from 'vuex';
+
 export default {
-  
+  computed: {
+    ...mapState(['activeCategory']),
+    ...mapGetters(['categories'])
+  },
+  methods: {
+    setCategory (category) {
+      this.$store.dispatch('setActiveCategory', category);
+    }
+  }
 }
 </script>
 
@@ -56,20 +46,24 @@ export default {
     align-items: center;
   }
 
-  a {
-    text-decoration: none;
-  }
-
   i {
     color: #3475b7;
     margin-right: 10px;
+  }
+
+  button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 16px;
   }
 
   li {
     margin-right: 30px;
 
     &:not(.active) {
-      a {
+      button {
         color: #fff;
       }
       i {
@@ -79,7 +73,7 @@ export default {
       }
     }
     &.active {
-      a {
+      button {
         color: #3475b7;
         background-color: #fff;
         border-radius: 5px;
@@ -97,7 +91,7 @@ export default {
 @media screen and (max-width: 1024px) { 
   .navigation-bar {
      li {
-       a {
+       button {
          display: flex;
          flex-direction: column;
          justify-content: center;

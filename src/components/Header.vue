@@ -2,14 +2,22 @@
   <header>
     <div class="pos__row">
       <div class="header__order">
-        <PosButton type="default" label="Cancel Order" />
-        <PosButton type="default" label="Select Customer" />
+        <PosButton
+          type="default"
+          label="Cancel Order"
+          @click="cancelOrder"
+        />
+        <PosButton
+          type="default"
+          :label="customerLabel"
+          @click="cycleCustomer"
+        />
       </div>
-      <div class="header__links">
+      <div class="header__status">
         <ul>
-          <li><a href="#">Lookup Pre-Paid</a></li>
-          <li><a href="#">Lookup Order</a></li>
-          <li><a href="#">Exit POS</a></li>
+          <li>Order #{{ orderNumber }}</li>
+          <li>{{ itemCount }} {{ itemLabel }}</li>
+          <li>{{ statusLabel }}</li>
         </ul>
       </div>
     </div>
@@ -17,12 +25,33 @@
 </template>
 
 <script>
-
+import { mapGetters, mapState } from 'vuex';
 import PosButton from './shared/PosButton';
 
 export default {
   components: {
     PosButton
+  },
+  computed: {
+    ...mapState(['orderNumber', 'orderStatus']),
+    ...mapGetters(['itemCount', 'selectedCustomer']),
+    customerLabel () {
+      return `Customer: ${this.selectedCustomer}`;
+    },
+    itemLabel () {
+      return this.itemCount === 1 ? 'item' : 'items';
+    },
+    statusLabel () {
+      return this.orderStatus === 'PAID' ? 'Status: Paid' : 'Status: Open';
+    }
+  },
+  methods: {
+    cancelOrder () {
+      this.$store.dispatch('cancelOrder');
+    },
+    cycleCustomer () {
+      this.$store.dispatch('cycleCustomer');
+    }
   }
 }
 </script>
@@ -49,9 +78,10 @@ header {
 }
 
 .header {
-  &__links {
+  &__status {
     display: flex;
     align-items: center;
+
     ul {
       list-style-type: none;
       display: flex;
@@ -59,14 +89,8 @@ header {
 
     li {
       margin-left: 40px;
-    }
-    a {
       color: $text-light;
-      text-decoration: none;
-
-      &:hover {
-        color: $text-dark;
-      }
+      font-weight: 600;
     }
   }
 }
@@ -77,7 +101,7 @@ header {
 /* SM: Screen */
 @media screen and (max-width: 1024px) { 
   .header {
-    &__links {
+    &__status {
       li {
         margin-left: 15px;
       }
