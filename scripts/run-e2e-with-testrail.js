@@ -1,36 +1,41 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const {
+  printArtifactSummary,
+  runPlaywrightAndBuildArtifacts
+} = require('./lib/run-playwright-and-build-artifacts');
 
 const nodeBin = process.execPath;
-const npxBin = process.platform === 'win32' ? 'npx.cmd' : 'npx';
-const playwrightArgs = ['playwright', 'test'].concat(process.argv.slice(2));
+const result = runPlaywrightAndBuildArtifacts(process.argv.slice(2));
 const reportPath = path.resolve(
   process.cwd(),
   process.env.TESTRAIL_JUNIT_PATH || 'test-results/junit-report.xml'
 );
 
-const testRun = spawnSync(npxBin, playwrightArgs, { stdio: 'inherit' });
+printArtifactSummary(result);
 
-if (testRun.error) {
-  console.error(testRun.error.message);
+if (!result.junitExists || !fs.existsSync(reportPath)) {
+  if (result.testExitCode !== 0) {
+    process.exit(result.testExitCode);
+  }
+
+  console.error(`JUnit report not found at ${reportPath}. Skipping TestRail upload.`);
   process.exit(1);
 }
 
-const testExitCode = testRun.status === null ? 1 : testRun.status;
-
-if (!fs.existsSync(reportPath)) {
-  console.error(`JUnit report not found at ${reportPath}. Skipping TestRail upload.`);
-  process.exit(testExitCode);
-}
-
+console.log('Uploading JUnit report to TestRail...');
 const uploadRun = spawnSync(nodeBin, [path.join(__dirname, 'upload-testrail-junit.js')], {
   stdio: 'inherit'
 });
 const uploadExitCode = uploadRun.status === null ? 1 : uploadRun.status;
 
-if (testExitCode !== 0) {
-  process.exit(testExitCode);
+if (result.testExitCode !== 0) {
+  process.exit(result.testExitCode);
+}
+
+if (result.pdfExitCode !== null && result.pdfExitCode !== 0) {
+  process.exit(result.pdfExitCode);
 }
 
 process.exit(uploadExitCode);

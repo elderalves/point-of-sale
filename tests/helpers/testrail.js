@@ -47,6 +47,10 @@ async function attachFailureScreenshot(page, testInfo) {
 
   await mkdir(screenshotDir, { recursive: true });
   await page.screenshot({ fullPage: true, path: screenshotPath });
+  await testInfo.attach('failure-screenshot', {
+    path: screenshotPath,
+    contentType: 'image/png'
+  });
 
   testInfo.annotations.push({
     type: 'testrail_attachment',

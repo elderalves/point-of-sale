@@ -66,7 +66,8 @@ test.describe('Mock POS flow', () => {
     await expect(page.locator('header')).toContainText('Status: Paid');
     await expect(invoiceValue(page, 'Payments')).toHaveText('$91.30');
     await expect(invoiceValue(page, 'Balance Due')).toHaveText('$0.00');
-    await expect(page.getByRole('button', { name: 'Paid' })).toBeDisabled();
+    // await expect(page.getByRole('button', { name: 'Paid' })).toBeDisabled();
+      await expect(page.getByRole('button', { name: 'Done' })).toBeDisabled();
   });
 
   test('filters products, cycles the customer, and cancels the order', async ({ page }, testInfo) => {

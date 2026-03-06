@@ -1,25 +1,50 @@
 require('dotenv').config();
-
-const { defineConfig } = require('@playwright/test');
-
-const hasTestRailConfig = [
-  'TESTRAIL_HOST',
-  'TESTRAIL_USERNAME',
-  'TESTRAIL_PROJECT_ID',
-  'TESTRAIL_SUITE_ID'
-].every((key) => Boolean(process.env[key])) &&
-  Boolean(process.env.TESTRAIL_API_KEY || process.env.TESTRAIL_PASSWORD);
+const os = require('node:os');
 const path = require('path');
 const { defineConfig } = require('@playwright/test');
 
 const resultsDir = path.join(__dirname, 'test-results');
+const reportMode = process.env.PLAYWRIGHT_REPORT_MODE;
+
+function getReporterConfig() {
+  const junitReporter = ['junit', {
+    outputFile: path.join(resultsDir, 'junit-report.xml'),
+    embedAnnotationsAsProperties: true
+  }];
+
+  if (reportMode === 'allure') {
+    return [
+      ['list'],
+      junitReporter,
+      ['allure-playwright', {
+        resultsDir: path.join(resultsDir, 'allure-results'),
+        detail: true,
+        environmentInfo: {
+          os_platform: os.platform(),
+          os_release: os.release(),
+          os_version: os.version(),
+          node_version: process.version
+        }
+      }]
+    ];
+  }
+
+  return [
+    ['list'],
+    ['html', {
+      open: 'never',
+      outputFolder: path.join(resultsDir, 'html-report')
+    }],
+    junitReporter
+  ];
+}
 
 module.exports = defineConfig({
   testDir: './tests',
   outputDir: path.join(resultsDir, 'artifacts'),
   use: {
     baseURL: 'http://127.0.0.1:4173',
-    trace: 'on-first-retry'
+    trace: 'retain-on-failure'
   },
   webServer: {
     command: 'npm run serve:test',
@@ -29,13 +54,5 @@ module.exports = defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120000
   },
-  reporter: [
-    ['list'], // Keep the default list reporter
-    ...(hasTestRailConfig ? [['playwright-testrail-reporter']] : []),
-    ['html', { open: 'never' }],
-    ['junit', {
-      outputFile: path.join(resultsDir, 'junit-report.xml'),
-      embedAnnotationsAsProperties: true
-    }]
-  ],
+  reporter: getReporterConfig(),
 });
